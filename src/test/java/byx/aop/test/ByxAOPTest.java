@@ -1,5 +1,6 @@
 package byx.aop.test;
 
+import byx.aop.annotation.After;
 import byx.aop.annotation.Before;
 import byx.aop.annotation.WithName;
 import byx.aop.exception.ByxAOPException;
@@ -18,6 +19,10 @@ public class ByxAOPTest {
         public StringEmptyException(String name) {
             super(name + "为空");
         }
+    }
+
+    public static class MyException extends RuntimeException {
+
     }
 
     public static class User {
@@ -93,6 +98,31 @@ public class ByxAOPTest {
             }
             return new String[]{nickname};
         }
+
+        @After
+        @WithName("getId")
+        public void afterGetId(int id) {
+            if (id == 1002) {
+                throw new MyException();
+            }
+        }
+
+        @After
+        @WithName("getUsername")
+        public String afterGetUsername(String username) {
+            if ("abcd".equals(username)) {
+                return "hhhh";
+            }
+            return username;
+        }
+    }
+
+    public static class UserAdvice2 {
+        @Before
+        @WithName("setId")
+        public int checkId(int id) {
+            return id;
+        }
     }
 
     public interface UserService {
@@ -165,5 +195,22 @@ public class ByxAOPTest {
         assertThrows(StringEmptyException.class, () -> userService.login("aaa", null));
 
         assertEquals("ccc 789", userService.register("bbb", "456"));
+
+        assertThrows(ByxAOPException.class, () -> getAopProxy(new User(), new UserAdvice2()));
+    }
+
+    @Test
+    public void testAfter() {
+        User user = getAopProxy(new User(), new UserAdvice());
+
+        user.setId(1001);
+        assertEquals(1001, user.getId());
+        user.setId(1002);
+        assertThrows(MyException.class, () -> user.getId());
+
+        user.setUsername("aaa");
+        assertEquals("aaa", user.getUsername());
+        user.setUsername("abcd");
+        assertEquals("hhhh", user.getUsername());
     }
 }

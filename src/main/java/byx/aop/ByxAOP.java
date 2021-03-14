@@ -23,67 +23,11 @@ public class ByxAOP {
 
             MethodInterceptor temp = null;
 
-            // Before
             if (method.isAnnotationPresent(Before.class)) {
-                // 无返回值
-                if (method.getReturnType() == void.class) {
-                    temp = interceptParameters(params -> {
-                        try {
-                            method.invoke(advice, params);
-                            return params;
-                        } catch (IllegalAccessException e) {
-                            throw new ByxAOPException("无法调用方法：" + method, e);
-                        } catch (InvocationTargetException e) {
-                            Throwable targetException = e.getTargetException();
-                            if (targetException instanceof RuntimeException) {
-                                throw (RuntimeException)targetException;
-                            }
-                            else {
-                                throw new ByxAOPException("增强方法不能抛出受检异常：" + method);
-                            }
-                        }
-                    });
-                }
-                // 返回值为数组
-                else if (method.getReturnType().isArray()) {
-                    temp = interceptParameters(params -> {
-                        try {
-                            return (Object[]) method.invoke(advice, params);
-                        } catch (IllegalAccessException e) {
-                            throw new ByxAOPException("无法调用方法：" + method, e);
-                        } catch (InvocationTargetException e) {
-                            Throwable targetException = e.getTargetException();
-                            if (targetException instanceof RuntimeException) {
-                                throw (RuntimeException)targetException;
-                            }
-                            else {
-                                throw new ByxAOPException("增强方法不能抛出受检异常：" + method);
-                            }
-                        }
-                    });
-                }
-                // 出错
-                else {
-                    throw new ByxAOPException("被@Before注解的方法要么无返回值，要么返回数组：" + method);
-                }
+                temp = processBefore(method, advice);
             }
             else if (method.isAnnotationPresent(After.class)) {
-                temp = interceptReturnValue(returnValue -> {
-                    try {
-                        return method.invoke(advice, returnValue);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            else if (method.isAnnotationPresent(Around.class)) {
-                temp = targetMethod -> {
-                    try {
-                        return method.invoke(advice, targetMethod);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                };
+                temp = processAfter(method, advice);
             }
 
             if (temp != null) {
@@ -95,5 +39,52 @@ public class ByxAOP {
             }
         }
         return ProxyUtils.proxy(target, interceptor);
+    }
+
+    private static Object callAdviceMethod(Method method, Object advice, Object[] params) {
+        try {
+            return method.invoke(advice, params);
+        } catch (IllegalAccessException e) {
+            throw new ByxAOPException("无法调用方法：" + method, e);
+        } catch (InvocationTargetException e) {
+            Throwable targetException = e.getTargetException();
+            if (targetException instanceof RuntimeException) {
+                throw (RuntimeException)targetException;
+            }
+            else {
+                throw new ByxAOPException("增强方法不能抛出受检异常：" + method);
+            }
+        }
+    }
+
+    private static MethodInterceptor processBefore(Method method, Object advice) {
+        if (method.getReturnType() == void.class) {
+            return interceptParameters(params -> {
+                callAdviceMethod(method, advice, params);
+                return params;
+            });
+        }
+        else if (method.getReturnType().isArray()) {
+            return interceptParameters(params -> {
+                return (Object[]) callAdviceMethod(method, advice, params);
+            });
+        }
+        else {
+            throw new ByxAOPException("被@Before注解的方法要么无返回值，要么返回数组：" + method);
+        }
+    }
+
+    private static MethodInterceptor processAfter(Method method, Object advice) {
+        if (method.getReturnType() == void.class) {
+            return interceptReturnValue(returnValue -> {
+                callAdviceMethod(method, advice, new Object[]{returnValue});
+                return returnValue;
+            });
+        }
+        else {
+            return interceptReturnValue(returnValue -> {
+                return callAdviceMethod(method, advice, new Object[]{returnValue});
+            });
+        }
     }
 }
