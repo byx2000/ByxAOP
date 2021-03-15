@@ -25,9 +25,10 @@ public class ByxAOP {
 
             if (method.isAnnotationPresent(Before.class)) {
                 temp = processBefore(method, advice);
-            }
-            else if (method.isAnnotationPresent(After.class)) {
+            } else if (method.isAnnotationPresent(After.class)) {
                 temp = processAfter(method, advice);
+            } else if (method.isAnnotationPresent(Around.class)) {
+                temp = processAround(method, advice);
             }
 
             if (temp != null) {
@@ -86,5 +87,11 @@ public class ByxAOP {
                 return callAdviceMethod(method, advice, new Object[]{returnValue});
             });
         }
+    }
+
+    private static MethodInterceptor processAround(Method method, Object advice) {
+        return targetMethod -> {
+            return callAdviceMethod(method, advice, new Object[]{targetMethod});
+        };
     }
 }

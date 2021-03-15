@@ -1,9 +1,11 @@
 package byx.aop.test;
 
 import byx.aop.annotation.After;
+import byx.aop.annotation.Around;
 import byx.aop.annotation.Before;
 import byx.aop.annotation.WithName;
 import byx.aop.exception.ByxAOPException;
+import byx.util.proxy.core.TargetMethod;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static byx.aop.ByxAOP.*;
@@ -128,6 +130,9 @@ public class ByxAOPTest {
     public interface UserService {
         String login(String username, String password);
         String register(String username, String password);
+        String list(String username, String password);
+        String get(String username, String password);
+        String insert(String username, String password);
     }
 
     public static class UserServiceImpl implements UserService {
@@ -138,6 +143,21 @@ public class ByxAOPTest {
 
         @Override
         public String register(String username, String password) {
+            return username + " " + password;
+        }
+
+        @Override
+        public String list(String username, String password) {
+            return username + " " + password;
+        }
+
+        @Override
+        public String get(String username, String password) {
+            return username + " " + password;
+        }
+
+        @Override
+        public String insert(String username, String password) {
             return username + " " + password;
         }
     }
@@ -158,6 +178,34 @@ public class ByxAOPTest {
         @WithName("register")
         public String[] changeRegister(String username, String password) {
             return new String[]{"ccc", "789"};
+        }
+
+        @Around
+        @WithName("list")
+        public String aroundList(TargetMethod targetMethod) {
+            Object[] params = targetMethod.getParams();
+            String ret = (String) targetMethod.invoke(params[0] + "x", params[1] + "0");
+            ret += " ok";
+            return ret;
+        }
+
+        @Around
+        @WithName("get")
+        public String aroundGet(TargetMethod targetMethod) {
+            Object[] params = targetMethod.getParams();
+            if (params[0] == null || params[1] == null) {
+                throw new MyException();
+            }
+            return targetMethod.invokeWithOriginalParams() + " get";
+        }
+
+        @Around
+        @WithName("insert")
+        public String aroundInsert(TargetMethod targetMethod) throws Exception {
+            if (targetMethod.getParams()[0] == null) {
+                throw new Exception();
+            }
+            return targetMethod.invokeWithOriginalParams() + " insert";
         }
     }
 
@@ -212,5 +260,17 @@ public class ByxAOPTest {
         assertEquals("aaa", user.getUsername());
         user.setUsername("abcd");
         assertEquals("hhhh", user.getUsername());
+    }
+
+    @Test
+    public void testAround() {
+        UserService userService = getAopProxy(new UserServiceImpl(), new UserServiceAdvice());
+
+        assertEquals("aaax 1230 ok", userService.list("aaa", "123"));
+        assertEquals("abc 123 get", userService.get("abc", "123"));
+        assertThrows(MyException.class, () -> userService.get(null, "123"));
+        assertThrows(MyException.class, () -> userService.get("abc", null));
+        assertEquals("xxx yyy insert", userService.insert("xxx", "yyy"));
+        assertThrows(ByxAOPException.class, () -> userService.insert(null, "yyy"));
     }
 }
