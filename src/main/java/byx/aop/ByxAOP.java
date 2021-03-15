@@ -12,7 +12,19 @@ import java.lang.reflect.Method;
 import static byx.util.proxy.core.MethodInterceptor.*;
 import static byx.util.proxy.core.MethodMatcher.*;
 
+/**
+ * AOP工具类
+ *
+ * @author byx
+ */
 public class ByxAOP {
+    /**
+     * 获取AOP代理对象
+     * @param target 目标对象
+     * @param advice 目标对象增强对象
+     * @param <T> 返回类型
+     * @return 已增强的对象
+     */
     public static <T> T getAopProxy(T target, Object advice) {
         Class<?> adviceClass = advice.getClass();
         MethodInterceptor interceptor = null;
@@ -60,6 +72,11 @@ public class ByxAOP {
         return interceptor == null ? target : ProxyUtils.proxy(target, interceptor);
     }
 
+    /**
+     * 调用增强对象的方法
+     * 增强对象的方法不允许抛出受检异常
+     * 如果增强对象的方法抛出RuntimeException，则直接向外抛出
+     */
     private static Object callAdviceMethod(Method method, Object advice, Object[] params) {
         try {
             method.setAccessible(true);
@@ -69,14 +86,16 @@ public class ByxAOP {
         } catch (InvocationTargetException e) {
             Throwable targetException = e.getTargetException();
             if (targetException instanceof RuntimeException) {
-                throw (RuntimeException)targetException;
-            }
-            else {
+                throw (RuntimeException) targetException;
+            } else {
                 throw new ByxAOPException("增强方法不能抛出受检异常：" + method);
             }
         }
     }
 
+    /**
+     * 解析@Before注解
+     */
     private static MethodInterceptor processBefore(Method method, Object advice) {
         if (method.getReturnType() == void.class) {
             return interceptParameters(params -> {
@@ -92,6 +111,9 @@ public class ByxAOP {
         }
     }
 
+    /**
+     * 解析@After注解
+     */
     private static MethodInterceptor processAfter(Method method, Object advice) {
         if (method.getReturnType() == void.class) {
             return interceptReturnValue(returnValue -> {
@@ -105,12 +127,18 @@ public class ByxAOP {
         }
     }
 
+    /**
+     * 解析@Around注解
+     */
     private static MethodInterceptor processAround(Method method, Object advice) {
         return targetMethod -> {
             return callAdviceMethod(method, advice, new Object[]{targetMethod});
         };
     }
 
+    /**
+     * 解析@Replace注解
+     */
     private static MethodInterceptor processReplace(Method method, Object advice) {
         return targetMethod -> {
             return callAdviceMethod(method, advice, targetMethod.getParams());

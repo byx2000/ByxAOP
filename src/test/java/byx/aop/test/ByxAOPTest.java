@@ -4,6 +4,7 @@ import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
 import byx.util.proxy.core.TargetMethod;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static byx.aop.ByxAOP.*;
 
@@ -141,10 +142,15 @@ public class ByxAOPTest {
 
     public interface UserService {
         String login(String username, String password);
+
         String register(String username, String password);
+
         String list(String username, String password);
+
         String get(String username, String password);
+
         String insert(String username, String password);
+
         String delete(String username, String password);
     }
 
@@ -231,8 +237,7 @@ public class ByxAOPTest {
         public String replaceDelete(String username, String password) throws Exception {
             if (username == null) {
                 throw new MyException();
-            }
-            else if (password == null) {
+            } else if (password == null) {
                 throw new Exception();
             }
             return password + " " + username;
