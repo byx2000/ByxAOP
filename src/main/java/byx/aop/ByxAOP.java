@@ -1,9 +1,6 @@
 package byx.aop;
 
-import byx.aop.annotation.After;
-import byx.aop.annotation.Around;
-import byx.aop.annotation.Before;
-import byx.aop.annotation.WithName;
+import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
 import byx.util.proxy.ProxyUtils;
 import byx.util.proxy.core.MethodInterceptor;
@@ -29,6 +26,8 @@ public class ByxAOP {
                 temp = processAfter(method, advice);
             } else if (method.isAnnotationPresent(Around.class)) {
                 temp = processAround(method, advice);
+            } else if (method.isAnnotationPresent(Replace.class)) {
+                temp = processReplace(method, advice);
             }
 
             if (temp != null) {
@@ -92,6 +91,12 @@ public class ByxAOP {
     private static MethodInterceptor processAround(Method method, Object advice) {
         return targetMethod -> {
             return callAdviceMethod(method, advice, new Object[]{targetMethod});
+        };
+    }
+
+    private static MethodInterceptor processReplace(Method method, Object advice) {
+        return targetMethod -> {
+            return callAdviceMethod(method, advice, targetMethod.getParams());
         };
     }
 }

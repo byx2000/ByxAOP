@@ -1,9 +1,6 @@
 package byx.aop.test;
 
-import byx.aop.annotation.After;
-import byx.aop.annotation.Around;
-import byx.aop.annotation.Before;
-import byx.aop.annotation.WithName;
+import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
 import byx.util.proxy.core.TargetMethod;
 import org.junit.jupiter.api.Test;
@@ -32,6 +29,7 @@ public class ByxAOPTest {
         private String username;
         private String password;
         private String nickname;
+        private String updateTime;
 
         public int getId() {
             return id;
@@ -63,6 +61,14 @@ public class ByxAOPTest {
 
         public void setNickname(String nickname) {
             this.nickname = nickname;
+        }
+
+        public String getUpdateTime() {
+            return updateTime;
+        }
+
+        public void setUpdateTime(String updateTime) {
+            this.updateTime = updateTime;
         }
     }
 
@@ -117,6 +123,12 @@ public class ByxAOPTest {
             }
             return username;
         }
+
+        @Replace
+        @WithName("getUpdateTime")
+        public String replaceGetUpdateTime() {
+            return "2021/3/15";
+        }
     }
 
     public static class UserAdvice2 {
@@ -133,6 +145,7 @@ public class ByxAOPTest {
         String list(String username, String password);
         String get(String username, String password);
         String insert(String username, String password);
+        String delete(String username, String password);
     }
 
     public static class UserServiceImpl implements UserService {
@@ -158,6 +171,11 @@ public class ByxAOPTest {
 
         @Override
         public String insert(String username, String password) {
+            return username + " " + password;
+        }
+
+        @Override
+        public String delete(String username, String password) {
             return username + " " + password;
         }
     }
@@ -206,6 +224,18 @@ public class ByxAOPTest {
                 throw new Exception();
             }
             return targetMethod.invokeWithOriginalParams() + " insert";
+        }
+
+        @Replace
+        @WithName("delete")
+        public String replaceDelete(String username, String password) throws Exception {
+            if (username == null) {
+                throw new MyException();
+            }
+            else if (password == null) {
+                throw new Exception();
+            }
+            return password + " " + username;
         }
     }
 
@@ -272,5 +302,18 @@ public class ByxAOPTest {
         assertThrows(MyException.class, () -> userService.get("abc", null));
         assertEquals("xxx yyy insert", userService.insert("xxx", "yyy"));
         assertThrows(ByxAOPException.class, () -> userService.insert(null, "yyy"));
+    }
+
+    @Test
+    public void testReplace() {
+        User user = getAopProxy(new User(), new UserAdvice());
+
+        user.setUpdateTime("2000/1/28");
+        assertEquals("2021/3/15", user.getUpdateTime());
+
+        UserService userService = getAopProxy(new UserServiceImpl(), new UserServiceAdvice());
+        assertEquals("def abc", userService.delete("abc", "def"));
+        assertThrows(MyException.class, () -> userService.delete(null, "def"));
+        assertThrows(ByxAOPException.class, () -> userService.delete("abc", null));
     }
 }
