@@ -4,20 +4,20 @@ import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
 import byx.util.proxy.ProxyUtils;
 import byx.util.proxy.core.MethodInterceptor;
+import byx.util.proxy.core.MethodMatcher;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static byx.util.proxy.core.MethodInterceptor.*;
-import static byx.util.proxy.core.MethodMatcher.withName;
+import static byx.util.proxy.core.MethodMatcher.*;
 
 public class ByxAOP {
     public static <T> T getAopProxy(T target, Object advice) {
         Class<?> adviceClass = advice.getClass();
-        MethodInterceptor interceptor = invokeTargetMethod();
-        for (Method method : adviceClass.getDeclaredMethods()) {
-            method.setAccessible(true);
+        MethodInterceptor interceptor = null;
 
+        for (Method method : adviceClass.getDeclaredMethods()) {
             MethodInterceptor temp = null;
 
             if (method.isAnnotationPresent(Before.class)) {
@@ -30,19 +30,39 @@ public class ByxAOP {
                 temp = processReplace(method, advice);
             }
 
-            if (temp != null) {
-                if (method.isAnnotationPresent(WithName.class)) {
-                    temp = temp.when(withName(method.getAnnotation(WithName.class).value()));
-                }
+            if (temp == null) {
+                continue;
+            }
 
+            MethodMatcher matcher = all();
+
+            if (method.isAnnotationPresent(WithName.class)) {
+                matcher = matcher.and(withName(method.getAnnotation(WithName.class).value()));
+            }
+            if (method.isAnnotationPresent(WithPattern.class)) {
+                matcher = matcher.and(withPattern(method.getAnnotation(WithPattern.class).value()));
+            }
+            if (method.isAnnotationPresent(WithReturnType.class)) {
+                matcher = matcher.and(withReturnType(method.getAnnotation(WithReturnType.class).value()));
+            }
+            if (method.isAnnotationPresent(WithParameterTypes.class)) {
+                matcher = matcher.and(withParameterTypes(method.getAnnotation(WithParameterTypes.class).value()));
+            }
+
+            temp = temp.when(matcher);
+
+            if (interceptor == null) {
+                interceptor = temp;
+            } else {
                 interceptor = interceptor.then(temp);
             }
         }
-        return ProxyUtils.proxy(target, interceptor);
+        return interceptor == null ? target : ProxyUtils.proxy(target, interceptor);
     }
 
     private static Object callAdviceMethod(Method method, Object advice, Object[] params) {
         try {
+            method.setAccessible(true);
             return method.invoke(advice, params);
         } catch (IllegalAccessException e) {
             throw new ByxAOPException("无法调用方法：" + method, e);
@@ -63,13 +83,11 @@ public class ByxAOP {
                 callAdviceMethod(method, advice, params);
                 return params;
             });
-        }
-        else if (method.getReturnType().isArray()) {
+        } else if (method.getReturnType().isArray()) {
             return interceptParameters(params -> {
                 return (Object[]) callAdviceMethod(method, advice, params);
             });
-        }
-        else {
+        } else {
             throw new ByxAOPException("被@Before注解的方法要么无返回值，要么返回数组：" + method);
         }
     }
@@ -80,8 +98,7 @@ public class ByxAOP {
                 callAdviceMethod(method, advice, new Object[]{returnValue});
                 return returnValue;
             });
-        }
-        else {
+        } else {
             return interceptReturnValue(returnValue -> {
                 return callAdviceMethod(method, advice, new Object[]{returnValue});
             });
