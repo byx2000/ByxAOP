@@ -110,10 +110,11 @@ public class ByxAOPTest {
 
         @After
         @WithName("getId")
-        public void afterGetId(int id) {
+        public int afterGetId(int id) {
             if (id == 1002) {
                 throw new MyException();
             }
+            return id;
         }
 
         @After

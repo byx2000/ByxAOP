@@ -122,15 +122,17 @@ public class ByxAOP {
          * 解析@After注解
          */
         private MethodInterceptor processAfter() {
-            if (method.getReturnType() == void.class) {
+            if (method.getParameterCount() == 0) {
                 return interceptReturnValue(returnValue -> {
-                    callAdviceMethod(new Object[]{returnValue});
+                    callAdviceMethod(new Object[]{});
                     return returnValue;
                 });
-            } else {
+            } else if (method.getParameterCount() == 1) {
                 return interceptReturnValue(returnValue -> {
                     return callAdviceMethod(new Object[]{returnValue});
                 });
+            } else {
+                throw new ByxAOPException("Illegal method signature with @After annotation: " + method);
             }
         }
 
