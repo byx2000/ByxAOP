@@ -48,13 +48,15 @@ public class ByxAOP {
 
         private MethodInterceptor getMethodInterceptor() {
             if (method.isAnnotationPresent(Before.class)) {
-                return processBefore(method, advice);
+                return processBefore();
             } else if (method.isAnnotationPresent(After.class)) {
-                return processAfter(method, advice);
+                return processAfter();
             } else if (method.isAnnotationPresent(Around.class)) {
-                return processAround(method, advice);
+                return processAround();
             } else if (method.isAnnotationPresent(Replace.class)) {
-                return processReplace(method, advice);
+                return processReplace();
+            } else if (method.isAnnotationPresent(AfterThrowing.class)) {
+                return processAfterThrowing();
             } else {
                 return invokeTargetMethod();
             }
@@ -82,7 +84,7 @@ public class ByxAOP {
          * 增强对象的方法不允许抛出受检异常
          * 如果增强对象的方法抛出RuntimeException，则直接向外抛出
          */
-        private static Object callAdviceMethod(Method method, Object advice, Object[] params) {
+        private Object callAdviceMethod(Object[] params) {
             try {
                 method.setAccessible(true);
                 return method.invoke(advice, params);
@@ -101,15 +103,15 @@ public class ByxAOP {
         /**
          * 解析@Before注解
          */
-        private static MethodInterceptor processBefore(Method method, Object advice) {
+        private MethodInterceptor processBefore() {
             if (method.getReturnType() == void.class) {
                 return interceptParameters(params -> {
-                    callAdviceMethod(method, advice, params);
+                    callAdviceMethod(params);
                     return params;
                 });
             } else if (method.getReturnType().isArray()) {
                 return interceptParameters(params -> {
-                    return (Object[]) callAdviceMethod(method, advice, params);
+                    return (Object[]) callAdviceMethod(params);
                 });
             } else {
                 throw new ByxAOPException("被@Before注解的方法要么无返回值，要么返回数组：" + method);
@@ -119,15 +121,15 @@ public class ByxAOP {
         /**
          * 解析@After注解
          */
-        private static MethodInterceptor processAfter(Method method, Object advice) {
+        private MethodInterceptor processAfter() {
             if (method.getReturnType() == void.class) {
                 return interceptReturnValue(returnValue -> {
-                    callAdviceMethod(method, advice, new Object[]{returnValue});
+                    callAdviceMethod(new Object[]{returnValue});
                     return returnValue;
                 });
             } else {
                 return interceptReturnValue(returnValue -> {
-                    return callAdviceMethod(method, advice, new Object[]{returnValue});
+                    return callAdviceMethod(new Object[]{returnValue});
                 });
             }
         }
@@ -135,19 +137,25 @@ public class ByxAOP {
         /**
          * 解析@Around注解
          */
-        private static MethodInterceptor processAround(Method method, Object advice) {
+        private MethodInterceptor processAround() {
             return targetMethod -> {
-                return callAdviceMethod(method, advice, new Object[]{targetMethod});
+                return callAdviceMethod(new Object[]{targetMethod});
             };
         }
 
         /**
          * 解析@Replace注解
          */
-        private static MethodInterceptor processReplace(Method method, Object advice) {
+        private MethodInterceptor processReplace() {
             return targetMethod -> {
-                return callAdviceMethod(method, advice, targetMethod.getParams());
+                return callAdviceMethod(targetMethod.getParams());
             };
+        }
+
+        private MethodInterceptor processAfterThrowing() {
+            return interceptException(t -> {
+                return callAdviceMethod(new Object[]{t});
+            });
         }
     }
 
