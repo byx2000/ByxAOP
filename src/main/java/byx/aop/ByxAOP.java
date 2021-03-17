@@ -2,10 +2,12 @@ package byx.aop;
 
 import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
+import byx.aop.exception.IllegalMethodSignatureException;
 import byx.util.proxy.ProxyUtils;
 import byx.util.proxy.core.MethodInterceptor;
 import byx.util.proxy.core.MethodMatcher;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -101,25 +103,33 @@ public class ByxAOP {
         }
 
         /**
-         * 解析@Before注解
+         * 解析Before注解
          */
         private MethodInterceptor processBefore() {
-            if (method.getReturnType() == void.class) {
+            if (method.getParameterCount() > 0) {
+                if (!method.getReturnType().isArray()) {
+                    throw new IllegalMethodSignatureException(method, Before.class);
+                }
                 return interceptParameters(params -> {
-                    callAdviceMethod(params);
-                    return params;
-                });
-            } else if (method.getReturnType().isArray()) {
-                return interceptParameters(params -> {
-                    return (Object[]) callAdviceMethod(params);
+                    // 避免基本类型数组转换时的坑
+                    Object ret = callAdviceMethod(params);
+                    int len = Array.getLength(ret);
+                    Object[] arr = new Object[len];
+                    for (int i = 0; i < len; ++i) {
+                        arr[i] = Array.get(ret, i);
+                    }
+                    return arr;
                 });
             } else {
-                throw new ByxAOPException("被@Before注解的方法要么无返回值，要么返回数组：" + method);
+                return interceptParameters(params -> {
+                    callAdviceMethod(new Object[]{});
+                    return params;
+                });
             }
         }
 
         /**
-         * 解析@After注解
+         * 解析After注解
          */
         private MethodInterceptor processAfter() {
             if (method.getParameterCount() == 0) {
@@ -132,12 +142,12 @@ public class ByxAOP {
                     return callAdviceMethod(new Object[]{returnValue});
                 });
             } else {
-                throw new ByxAOPException("Illegal method signature with @After annotation: " + method);
+                throw new IllegalMethodSignatureException(method, After.class);
             }
         }
 
         /**
-         * 解析@Around注解
+         * 解析Around注解
          */
         private MethodInterceptor processAround() {
             return targetMethod -> {
@@ -146,7 +156,7 @@ public class ByxAOP {
         }
 
         /**
-         * 解析@Replace注解
+         * 解析Replace注解
          */
         private MethodInterceptor processReplace() {
             return targetMethod -> {

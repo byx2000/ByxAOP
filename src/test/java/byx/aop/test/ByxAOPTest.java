@@ -76,18 +76,20 @@ public class ByxAOPTest {
     public static class UserAdvice {
         @Before
         @WithName("setId")
-        public void checkId(int id) {
+        public int[] checkId(int id) {
             if (id < 0) {
                 throw new IdLessThanZeroException();
             }
+            return new int[]{id};
         }
 
         @Before
         @WithName("setUsername")
-        public void checkUsername(String username) throws Exception {
+        public String[] checkUsername(String username) throws Exception {
             if (username == null || username.isEmpty()) {
                 throw new Exception();
             }
+            return new String[]{username};
         }
 
         @Before
@@ -190,13 +192,14 @@ public class ByxAOPTest {
     public static class UserServiceAdvice {
         @Before
         @WithName("login")
-        public void checkLogin(String username, String password) {
+        public String[] checkLogin(String username, String password) {
             if (username == null || username.isEmpty()) {
                 throw new StringEmptyException("username");
             }
             if (password == null || password.isEmpty()) {
                 throw new StringEmptyException("password");
             }
+            return new String[]{username, password};
         }
 
         @Before
