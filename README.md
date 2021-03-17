@@ -2,6 +2,36 @@
 
 ByxAOP是一个简易AOP框架，实现了前置增强、后置增强、环绕增强等功能，支持注解方式使用。
 
+## 在项目中引入ByxAOP
+
+1. 添加maven仓库地址
+
+    ```xml
+    <repositories>
+        <repository>
+            <id>byx-maven-repo</id>
+            <name>byx-maven-repo</name>
+            <url>https://gitee.com/byx2000/maven-repo/raw/master/</url>
+        </repository>
+    </repositories>
+    ```
+
+2. 添加maven依赖
+
+    ```xml
+    <dependencies>
+        <dependency>
+            <groupId>byx.aop</groupId>
+            <artifactId>ByxAOP</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+    ```
+
+## API文档
+
+[API文档](http://byx2000.gitee.io/javadoc/ByxAOP-1.0.0-javadoc/)
+
 ## 使用示例
 
 下面通过一个简单的例子来快速了解ByxAOP的使用。
