@@ -91,13 +91,13 @@ public class ByxAOP {
                 method.setAccessible(true);
                 return method.invoke(advice, params);
             } catch (IllegalAccessException e) {
-                throw new ByxAOPException("无法调用方法：" + method, e);
+                throw new ByxAOPException("Cannot invoke method: " + method, e);
             } catch (InvocationTargetException e) {
                 Throwable targetException = e.getTargetException();
                 if (targetException instanceof RuntimeException) {
                     throw (RuntimeException) targetException;
                 } else {
-                    throw new ByxAOPException("增强方法不能抛出受检异常：" + method);
+                    throw new ByxAOPException("Enhanced methods cannot throw checked exceptions: " + method);
                 }
             }
         }

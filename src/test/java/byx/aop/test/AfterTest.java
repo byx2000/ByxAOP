@@ -3,6 +3,7 @@ package byx.aop.test;
 import byx.aop.annotation.After;
 import byx.aop.annotation.WithName;
 import byx.aop.exception.ByxAOPException;
+import byx.aop.exception.IllegalMethodSignatureException;
 import org.junit.jupiter.api.Test;
 
 import static byx.aop.ByxAOP.getAopProxy;
@@ -10,6 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AfterTest {
     private static boolean flag = false;
+
+    public static class MyException1 extends Exception {}
+    public static class MyException2 extends RuntimeException {}
 
     public static class A {
         public int f1() {
@@ -64,8 +68,22 @@ public class AfterTest {
         }
     }
 
+    public static class Advice3 {
+        @After
+        @WithName("f1")
+        public void g1(int a) throws MyException1 {
+            throw new MyException1();
+        }
+
+        @After
+        @WithName("f3")
+        public void g2() {
+            throw new MyException2();
+        }
+    }
+
     @Test
-    public void test() {
+    public void test1() {
         A a = getAopProxy(new A(), new Advice());
 
         assertEquals(2002, a.f1());
@@ -79,7 +97,19 @@ public class AfterTest {
         flag = false;
         a.f4();
         assertTrue(flag);
+    }
 
-        assertThrows(ByxAOPException.class, () -> getAopProxy(new A(), new Advice2()));
+    @Test
+    public void test2() {
+        assertThrows(IllegalMethodSignatureException.class, () -> getAopProxy(new A(), new Advice2()));
+    }
+
+    @Test
+    public void test3() {
+        A a = getAopProxy(new A(), new Advice3());
+
+        assertThrows(ByxAOPException.class, () -> a.f1());
+
+        assertThrows(MyException2.class, () -> a.f3(123));
     }
 }
