@@ -75,7 +75,7 @@ public class ByxAOPTest {
 
     public static class UserAdvice {
         @Before
-        @WithName("setId")
+        @Filter(name = "setId")
         public int[] checkId(int id) {
             if (id < 0) {
                 throw new IdLessThanZeroException();
@@ -84,7 +84,7 @@ public class ByxAOPTest {
         }
 
         @Before
-        @WithName("setUsername")
+        @Filter(name = "setUsername")
         public String[] checkUsername(String username) throws Exception {
             if (username == null || username.isEmpty()) {
                 throw new Exception();
@@ -93,7 +93,7 @@ public class ByxAOPTest {
         }
 
         @Before
-        @WithName("setPassword")
+        @Filter(name = "setPassword")
         public String[] changePassword(String password) {
             if (password == null || password.isEmpty()) {
                 throw new StringEmptyException("password");
@@ -102,7 +102,7 @@ public class ByxAOPTest {
         }
 
         @Before
-        @WithName("setNickname")
+        @Filter(name = "setNickname")
         public String[] checkNickname(String nickname) throws Exception {
             if (nickname == null || nickname.isEmpty()) {
                 throw new Exception();
@@ -111,7 +111,7 @@ public class ByxAOPTest {
         }
 
         @After
-        @WithName("getId")
+        @Filter(name = "getId")
         public int afterGetId(int id) {
             if (id == 1002) {
                 throw new MyException();
@@ -120,7 +120,7 @@ public class ByxAOPTest {
         }
 
         @After
-        @WithName("getUsername")
+        @Filter(name = "getUsername")
         public String afterGetUsername(String username) {
             if ("abcd".equals(username)) {
                 return "hhhh";
@@ -129,7 +129,7 @@ public class ByxAOPTest {
         }
 
         @Replace
-        @WithName("getUpdateTime")
+        @Filter(name = "getUpdateTime")
         public String replaceGetUpdateTime() {
             return "2021/3/15";
         }
@@ -137,7 +137,7 @@ public class ByxAOPTest {
 
     public static class UserAdvice2 {
         @Before
-        @WithName("setId")
+        @Filter(name = "setId")
         public int checkId(int id) {
             return id;
         }
@@ -191,7 +191,7 @@ public class ByxAOPTest {
 
     public static class UserServiceAdvice {
         @Before
-        @WithName("login")
+        @Filter(name = "login")
         public String[] checkLogin(String username, String password) {
             if (username == null || username.isEmpty()) {
                 throw new StringEmptyException("username");
@@ -203,13 +203,13 @@ public class ByxAOPTest {
         }
 
         @Before
-        @WithName("register")
+        @Filter(name = "register")
         public String[] changeRegister(String username, String password) {
             return new String[]{"ccc", "789"};
         }
 
         @Around
-        @WithName("list")
+        @Filter(name = "list")
         public String aroundList(TargetMethod targetMethod) {
             Object[] params = targetMethod.getParams();
             String ret = (String) targetMethod.invoke(params[0] + "x", params[1] + "0");
@@ -218,7 +218,7 @@ public class ByxAOPTest {
         }
 
         @Around
-        @WithName("get")
+        @Filter(name = "get")
         public String aroundGet(TargetMethod targetMethod) {
             Object[] params = targetMethod.getParams();
             if (params[0] == null || params[1] == null) {
@@ -228,7 +228,7 @@ public class ByxAOPTest {
         }
 
         @Around
-        @WithName("insert")
+        @Filter(name = "insert")
         public String aroundInsert(TargetMethod targetMethod) throws Exception {
             if (targetMethod.getParams()[0] == null) {
                 throw new Exception();
@@ -237,7 +237,7 @@ public class ByxAOPTest {
         }
 
         @Replace
-        @WithName("delete")
+        @Filter(name = "delete")
         public String replaceDelete(String username, String password) throws Exception {
             if (username == null) {
                 throw new MyException();

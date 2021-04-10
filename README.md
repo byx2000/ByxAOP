@@ -1,6 +1,6 @@
 # ByxAOP——简易AOP框架
 
-ByxAOP是一个简易AOP框架，实现了前置增强、后置增强、环绕增强等功能，支持注解方式使用。
+ByxAOP是一个简易AOP框架，基于JDK动态代理和CGLIB动态代理，支持前置增强、后置增强、环绕增强、异常增强四种增强类型。
 
 ## Maven引入
 
@@ -271,24 +271,15 @@ public String handleException(MyException e) {
 
 ## 方法匹配器注解
 
-ByxAOP支持以下方法匹配器的注解：
+使用`@Filter`注解用来指定目标对象中哪些方法需要被增强。
 
-|注解|值|说明|
-|---|---|---|
-|`@WithName`|方法名|匹配具有指定方法名的方法|
-|`@WithPattern`|正则表达式|匹配方法名满足指定正则表达式的方法|
-|`@WithReturnType`|返回值类型|匹配具有指定返回值类型的方法|
-|`@WithParameterTypes`|参数类型数组|匹配具有指定参数类型的方法|
-
-方法匹配器注解需要与拦截类型注解配合使用，用来指定需要拦截目标中的哪些方法。
+如果不指定`@Filter`，则默认拦截所有方法。
 
 下面的代码定义了一个前置增强，它作用于目标对象中所有方法名为`f1`、返回值类型为`int`、参数类型为`String`的方法：
 
 ```java
 @Before
-@WithName("f1")
-@WithReturnType(int.class)
-@WithParameterTypes(String.class)
+@Filter(name = "f1", returnType = int.class, parameterTypes = String.class)
 public String[] g1(String s) {
     return new String[]{s + "x"};
 }
@@ -298,7 +289,7 @@ public String[] g1(String s) {
 
 ```java
 @Around
-@WithPattern("list(.*)")
+@Filter(pattern = "list(.*)")
 public Object handleException(TargetMethod targetMethod) {
     try {
         return targetMethod.invokeWithOriginalParams();
@@ -328,7 +319,7 @@ public class A {
 ```java
 public static class Advice {
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     public String apple(TargetMethod targetMethod) {
         System.out.println("before 1");
         Object ret = targetMethod.invokeWithOriginalParams();
@@ -337,7 +328,7 @@ public static class Advice {
     }
 
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     public String cat(TargetMethod targetMethod) {
         System.out.println("before 2");
         Object ret = targetMethod.invokeWithOriginalParams();
@@ -346,7 +337,7 @@ public static class Advice {
     }
 
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     public String banana(TargetMethod targetMethod) {
         System.out.println("before 3");
         Object ret = targetMethod.invokeWithOriginalParams();
@@ -378,21 +369,21 @@ after 1
 ```java
 public static class Advice {
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     @Order(1)
     public String apple(TargetMethod targetMethod) {
         ...
     }
 
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     @Order(2)
     public String cat(TargetMethod targetMethod) {
         ...
     }
 
     @Around
-    @WithName("f")
+    @Filter(name = "f")
     @Order(3)
     public String banana(TargetMethod targetMethod) {
         ...

@@ -1,10 +1,11 @@
 package byx.aop.test;
 
 import byx.aop.annotation.AfterThrowing;
-import byx.aop.annotation.WithName;
+import byx.aop.annotation.Filter;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import static byx.aop.ByxAOP.*;
+
+import static byx.aop.ByxAOP.getAopProxy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AfterThrowingTest {
     public static class MyException1 extends Exception {
@@ -36,14 +37,14 @@ public class AfterThrowingTest {
 
     public static class Advice {
         @AfterThrowing
-        @WithName("f1")
+        @Filter(name = "f1")
         public int g1(MyException1 e) {
             assertEquals("exception 1", e.getMessage());
             return 3003;
         }
 
         @AfterThrowing
-        @WithName("f2")
+        @Filter(name = "f2")
         public int g2(MyException2 e) {
             assertEquals("exception 2", e.getMessage());
             return 4004;

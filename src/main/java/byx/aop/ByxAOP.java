@@ -23,7 +23,7 @@ import static byx.util.proxy.core.MethodMatcher.*;
  */
 public class ByxAOP {
     /**
-     * 存放一个增强方法的定义
+     * 存放一个方法拦截器的定义
      */
     private static class MethodInterceptorDefinition {
         private final Object advice;
@@ -48,6 +48,9 @@ public class ByxAOP {
             return getMethodInterceptor().when(getMethodMatcher());
         }
 
+        /**
+         * 解析拦截类型注解，生成方法拦截器
+         */
         private MethodInterceptor getMethodInterceptor() {
             if (method.isAnnotationPresent(Before.class)) {
                 return processBefore();
@@ -64,20 +67,29 @@ public class ByxAOP {
             }
         }
 
+        /**
+         * 解析Filter注解，生成方法匹配器
+         */
         private MethodMatcher getMethodMatcher() {
             MethodMatcher matcher = all();
-            if (method.isAnnotationPresent(WithName.class)) {
-                matcher = matcher.and(withName(method.getAnnotation(WithName.class).value()));
+
+            if (method.isAnnotationPresent(Filter.class)) {
+                Filter filter = method.getAnnotation(Filter.class);
+
+                if (!"".equals(filter.name())) {
+                    matcher = matcher.andName(filter.name());
+                } else if (!"".equals(filter.pattern())) {
+                    matcher = matcher.andPattern(filter.pattern());
+                }
+
+                if (filter.returnType() != Filter.Dummy.class) {
+                    matcher = matcher.andReturnType(filter.returnType());
+                }
+                if (filter.parameterTypes().length > 0) {
+                    matcher = matcher.andParameterTypes(filter.parameterTypes());
+                }
             }
-            if (method.isAnnotationPresent(WithPattern.class)) {
-                matcher = matcher.and(withPattern(method.getAnnotation(WithPattern.class).value()));
-            }
-            if (method.isAnnotationPresent(WithReturnType.class)) {
-                matcher = matcher.and(withReturnType(method.getAnnotation(WithReturnType.class).value()));
-            }
-            if (method.isAnnotationPresent(WithParameterTypes.class)) {
-                matcher = matcher.and(withParameterTypes(method.getAnnotation(WithParameterTypes.class).value()));
-            }
+
             return matcher;
         }
 
@@ -179,6 +191,11 @@ public class ByxAOP {
      * @return 已增强的对象
      */
     public static <T> T getAopProxy(T target, Object advice) {
+        // 1. 获取增强类（advice）中的所有方法
+        // 2. 解析方法上的注解，并封装成MethodInterceptorDefinition
+        // 3. 根据order数值排序
+        // 4. 把MethodInterceptorDefinition转换成MethodInterceptor
+        // 5. 用then把所有方法拦截器连接起来，形成拦截器链
         MethodInterceptor interceptor = Arrays
                 .stream(advice.getClass().getDeclaredMethods())
                 .map(m -> new MethodInterceptorDefinition(advice, m))

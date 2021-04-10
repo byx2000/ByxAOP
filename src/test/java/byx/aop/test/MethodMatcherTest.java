@@ -28,33 +28,26 @@ public class MethodMatcherTest {
 
     public static class Advice {
         @Before
-        @WithName("f1")
-        @WithReturnType(int.class)
-        @WithParameterTypes(String.class)
+        @Filter(name = "f1", returnType = int.class, parameterTypes = String.class)
         public String[] g1(String s) {
             return new String[]{s + "x"};
         }
 
         @After
-        @WithPattern(".1")
-        @WithReturnType(String.class)
+        @Filter(pattern = ".1", returnType = String.class)
         public String g2(String ret) {
             return ret + " hi";
         }
 
         @Around
-        @WithPattern(".*")
-        @WithParameterTypes({int.class, int.class})
-        @WithReturnType(String.class)
+        @Filter(pattern = ".*", parameterTypes = {int.class, int.class}, returnType = String.class)
         public String g3(TargetMethod targetMethod) {
             Object[] params = targetMethod.getParams();
             return (String) targetMethod.invoke((int) params[0] + 1, (int) params[1] + 1);
         }
 
         @Replace
-        @WithName("f2")
-        @WithReturnType(String.class)
-        @WithParameterTypes({int.class, String.class})
+        @Filter(name = "f2", returnType = String.class, parameterTypes = {int.class, String.class})
         public String g4(int a, String b) {
             return a + " " + b + " g4";
         }

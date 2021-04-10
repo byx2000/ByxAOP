@@ -1,12 +1,13 @@
 package byx.aop.test;
 
 import byx.aop.annotation.Before;
-import byx.aop.annotation.WithName;
+import byx.aop.annotation.Filter;
 import byx.aop.exception.ByxAOPException;
 import byx.aop.exception.IllegalMethodSignatureException;
 import org.junit.jupiter.api.Test;
+
+import static byx.aop.ByxAOP.getAopProxy;
 import static org.junit.jupiter.api.Assertions.*;
-import static byx.aop.ByxAOP.*;
 
 public class BeforeTest {
     private static boolean flag = false;
@@ -42,37 +43,37 @@ public class BeforeTest {
 
     public static class Advice {
         @Before
-        @WithName("f1")
+        @Filter(name = "f1")
         public void g1() {
             flag = true;
         }
 
         @Before
-        @WithName("f2")
+        @Filter(name = "f2")
         public int[] f2(int i) {
             return new int[]{i + 1};
         }
 
         @Before
-        @WithName("f3")
+        @Filter(name = "f3")
         public void g3() {
             flag = true;
         }
 
         @Before
-        @WithName("f4")
+        @Filter(name = "f4")
         public int[] g4(int i, int j, int k) {
             return new int[]{i + 1, j + 1, k + 1};
         }
 
         @Before
-        @WithName("f5")
+        @Filter(name = "f5")
         public String[] g5(String a) {
             return new String[]{a + a};
         }
 
         @Before
-        @WithName("f6")
+        @Filter(name = "f6")
         public String[] g6(String a, String b) {
             return new String[]{b, a};
         }
@@ -80,7 +81,7 @@ public class BeforeTest {
 
     public static class Advice2 {
         @Before
-        @WithName("f2")
+        @Filter(name = "f2")
         public int g1(int i) {
             return i;
         }
@@ -88,13 +89,13 @@ public class BeforeTest {
 
     public static class Advice3 {
         @Before
-        @WithName("f3")
+        @Filter(name = "f3")
         public void g1() throws MyException1 {
             throw new MyException1();
         }
 
         @Before
-        @WithName("f4")
+        @Filter(name = "f4")
         public int[] g2(int i, int j, int k) {
             throw new MyException2();
         }

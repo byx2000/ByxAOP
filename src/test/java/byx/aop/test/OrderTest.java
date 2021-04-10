@@ -1,8 +1,8 @@
 package byx.aop.test;
 
 import byx.aop.annotation.Around;
+import byx.aop.annotation.Filter;
 import byx.aop.annotation.Order;
-import byx.aop.annotation.WithName;
 import byx.util.proxy.core.TargetMethod;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +23,7 @@ public class OrderTest {
 
     public static class Advice {
         @Around
-        @WithName("f")
+        @Filter(name = "f")
         @Order(1)
         public String apple(TargetMethod targetMethod) {
             System.out.println("before 1");
@@ -33,7 +33,7 @@ public class OrderTest {
         }
 
         @Around
-        @WithName("f")
+        @Filter(name = "f")
         @Order(2)
         public String cat(TargetMethod targetMethod) {
             System.out.println("before 2");
@@ -43,7 +43,7 @@ public class OrderTest {
         }
 
         @Around
-        @WithName("f")
+        @Filter(name = "f")
         @Order(3)
         public String banana(TargetMethod targetMethod) {
             System.out.println("before 3");

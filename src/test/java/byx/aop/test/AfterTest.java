@@ -1,7 +1,7 @@
 package byx.aop.test;
 
 import byx.aop.annotation.After;
-import byx.aop.annotation.WithName;
+import byx.aop.annotation.Filter;
 import byx.aop.exception.ByxAOPException;
 import byx.aop.exception.IllegalMethodSignatureException;
 import org.junit.jupiter.api.Test;
@@ -35,26 +35,26 @@ public class AfterTest {
 
     public static class Advice {
         @After
-        @WithName("f1")
+        @Filter(name = "f1")
         public int g1(int retVal) {
             assertEquals(1001, retVal);
             return 2002;
         }
 
         @After
-        @WithName("f2")
+        @Filter(name = "f2")
         public String g2(String retVal) {
             return retVal + " hello";
         }
 
         @After
-        @WithName("f3")
+        @Filter(name = "f3")
         public void g3() {
             flag = true;
         }
 
         @After
-        @WithName("f4")
+        @Filter(name = "f4")
         public void g4() {
             flag = true;
         }
@@ -62,7 +62,7 @@ public class AfterTest {
 
     public static class Advice2 {
         @After
-        @WithName("f1")
+        @Filter(name = "f1")
         public void g(int a, String b) {
 
         }
@@ -70,13 +70,13 @@ public class AfterTest {
 
     public static class Advice3 {
         @After
-        @WithName("f1")
+        @Filter(name = "f1")
         public void g1(int a) throws MyException1 {
             throw new MyException1();
         }
 
         @After
-        @WithName("f3")
+        @Filter(name = "f3")
         public void g2() {
             throw new MyException2();
         }
