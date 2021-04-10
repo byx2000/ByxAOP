@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>byx.aop</groupId>
-    <artifactId>ByxAOP</artifactId>
+    <artifactId>byx-aop</artifactId>
     <version>1.0.0</version>
 
     <properties>
