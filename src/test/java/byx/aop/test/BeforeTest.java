@@ -149,6 +149,6 @@ public class BeforeTest {
     @Test
     public void test4() {
         A a = getAopProxy(new A(), new Advice4());
-        a.f2(100);
+        assertEquals("hello 100", a.f2(100));
     }
 }

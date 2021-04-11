@@ -159,9 +159,16 @@ public class ByxAOP {
                     return returnValue;
                 });
             } else if (method.getParameterCount() == 1) {
-                return interceptReturnValue(returnValue -> {
-                    return callAdviceMethod(new Object[]{returnValue});
-                });
+                if (method.getReturnType() == void.class) {
+                    return interceptReturnValue(returnValue -> {
+                        callAdviceMethod(new Object[]{returnValue});
+                        return returnValue;
+                    });
+                } else {
+                    return interceptReturnValue(returnValue -> {
+                        return callAdviceMethod(new Object[]{returnValue});
+                    });
+                }
             } else {
                 throw new IllegalMethodSignatureException(method, After.class);
             }

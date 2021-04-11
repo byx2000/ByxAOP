@@ -82,6 +82,15 @@ public class AfterTest {
         }
     }
 
+    public static class Advice4 {
+        @After
+        @Filter(name = "f2")
+        public void afterF2(String s) {
+            System.out.println("after f2");
+            System.out.println("s = " + s);
+        }
+    }
+
     @Test
     public void test1() {
         A a = getAopProxy(new A(), new Advice());
@@ -111,5 +120,11 @@ public class AfterTest {
         assertThrows(ByxAOPException.class, () -> a.f1());
 
         assertThrows(MyException2.class, () -> a.f3(123));
+    }
+
+    @Test
+    public void test4() {
+        A a = getAopProxy(new A(), new Advice4());
+        assertEquals("101", a.f2(100));
     }
 }
