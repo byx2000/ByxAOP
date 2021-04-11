@@ -101,6 +101,16 @@ public class BeforeTest {
         }
     }
 
+    public static class Advice4 {
+        @Before
+        @Filter(name = "f2")
+        public void beforeF2(int n) {
+            System.out.println("before f2");
+            System.out.println("n = " + n);
+            assertEquals(100, n);
+        }
+    }
+
     @Test
     public void test1() {
         A a = getAopProxy(new A(), new Advice());
@@ -134,5 +144,11 @@ public class BeforeTest {
         assertThrows(ByxAOPException.class, () -> a.f3(100, 200));
 
         assertThrows(MyException2.class, () -> a.f4(3, 4, 5));
+    }
+
+    @Test
+    public void test4() {
+        A a = getAopProxy(new A(), new Advice4());
+        a.f2(100);
     }
 }

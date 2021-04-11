@@ -119,19 +119,28 @@ public class ByxAOP {
          */
         private MethodInterceptor processBefore() {
             if (method.getParameterCount() > 0) {
-                if (!method.getReturnType().isArray()) {
+                if (method.getReturnType().isArray()) {
+                    return interceptParameters(params -> {
+                        // 避免基本类型数组转换时的坑
+                        // 一个基本类型的数组无法强制转换成Object[]
+                        // 所以只能把返回的数组中每个元素单独拿出来
+                        // 然后依次放入一个新的Object[]中
+                        Object ret = callAdviceMethod(params);
+                        int len = Array.getLength(ret);
+                        Object[] arr = new Object[len];
+                        for (int i = 0; i < len; ++i) {
+                            arr[i] = Array.get(ret, i);
+                        }
+                        return arr;
+                    });
+                } else if(method.getReturnType() == void.class) {
+                    return interceptParameters(params -> {
+                        callAdviceMethod(params);
+                        return params;
+                    });
+                } else {
                     throw new IllegalMethodSignatureException(method, Before.class);
                 }
-                return interceptParameters(params -> {
-                    // 避免基本类型数组转换时的坑
-                    Object ret = callAdviceMethod(params);
-                    int len = Array.getLength(ret);
-                    Object[] arr = new Object[len];
-                    for (int i = 0; i < len; ++i) {
-                        arr[i] = Array.get(ret, i);
-                    }
-                    return arr;
-                });
             } else {
                 return interceptParameters(params -> {
                     callAdviceMethod(new Object[]{});
