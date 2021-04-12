@@ -124,25 +124,33 @@ public int target(int a, String b) {
 }
 ```
 
-前置增强有两种使用方式：
+前置增强有三种使用方式：
 
-1. 在目标方法调用之前执行自定义操作，不拦截参数，此时拦截方法无需接收任何参数，也无需返回任何值
+1. 在目标方法调用之前执行自定义操作
 
     ```java
     @Before
     public void beforeTarget() {
-        // 调用targte方法之前执行
-        // ...
+        // 自定义操作...
     }
     ```
 
-2. 拦截目标方法的参数，同时可修改目标方法的参数，此时拦截方法需要接收目标方法的原始参数，返回修改后的参数数组
+2. 获取目标方法的参数并执行自定义操作，但不修改参数值
+
+    ```java
+    @Before
+    public void beforeTarget(int n) {
+        // n为传入目标方法的参数值
+        // 自定义操作...
+    }
+    ``
+
+3. 拦截目标方法的参数，并可修改目标方法的参数
 
     ```java
     @Before
     public Object[] beforeTarget(int a, String b) {
-        // 对目标方法的原始参数a、b进行处理
-        // ...
+        // 自定义操作...
 
         // 返回修改后的方法参数数组
         return new Object[]{...};
@@ -161,26 +169,35 @@ public String target(String a, String b) {
 }
 ```
 
-后置增强有两种使用方式：
+后置增强有三种使用方式：
 
-1. 在目标方法调用之后执行自定义操作，不拦截返回值，此时拦截方法无需接收任何参数，也无需返回任何值
+1. 在目标方法返回之后执行自定义操作
 
     ```java
     @After
     public void afterTarget() {
-        // target方法返回之后执行
-        // ...
+        // 自定义操作...
     }
     ```
 
-2. 拦截目标方法的返回值，同时可修改目标方法的返回值，此时拦截方法需要接收目标方法的原始返回值，返回修改后的返回值
+2. 接收目标方法的返回值并执行自定义操作，但不修改返回值
+
+    ```java
+    @After
+    public void afterTarget(int retVal) {
+        // retVal为目标方法的返回值
+        // 自定义操作...
+    }
+    ```
+
+3. 拦截目标方法的返回值，并可修改目标方法的返回值
 
     ```java
     @After
     public String afterTarget(String retVal) {
-        // 对原始返回值retVal进行处理
-        // ...
-        // 返回修改后的返回值
+        // 自定义操作...
+
+        // 返回一个新的返回值
         return ...;
     }
     ```
