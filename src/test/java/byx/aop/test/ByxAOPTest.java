@@ -98,7 +98,12 @@ public class ByxAOPTest {
             if (password == null || password.isEmpty()) {
                 throw new StringEmptyException("password");
             }
-            return new String[]{"*".repeat(password.length())};
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < password.length(); ++i) {
+                sb.append("*");
+            }
+            //return new String[]{"*".repeat(password.length())};
+            return new String[]{sb.toString()};
         }
 
         @Before
