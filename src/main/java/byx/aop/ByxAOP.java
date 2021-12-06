@@ -165,9 +165,7 @@ public class ByxAOP {
                         return returnValue;
                     });
                 } else {
-                    return interceptReturnValue(returnValue -> {
-                        return callAdviceMethod(new Object[]{returnValue});
-                    });
+                    return interceptReturnValue(returnValue -> callAdviceMethod(new Object[]{returnValue}));
                 }
             } else {
                 throw new IllegalMethodSignatureException(method, After.class);
@@ -178,46 +176,51 @@ public class ByxAOP {
          * 解析Around注解
          */
         private MethodInterceptor processAround() {
-            return targetMethod -> {
-                return callAdviceMethod(new Object[]{targetMethod});
-            };
+            return targetMethod -> callAdviceMethod(new Object[]{targetMethod});
         }
 
         /**
          * 解析Replace注解
          */
         private MethodInterceptor processReplace() {
-            return targetMethod -> {
-                return callAdviceMethod(targetMethod.getParams());
-            };
+            return targetMethod -> callAdviceMethod(targetMethod.getParams());
         }
 
         private MethodInterceptor processAfterThrowing() {
-            return interceptException(t -> {
-                return callAdviceMethod(new Object[]{t});
-            });
+            return interceptException(t -> callAdviceMethod(new Object[]{t}));
         }
+    }
+
+    private static boolean isInterceptMethod(Method m) {
+        return m.isAnnotationPresent(Before.class)
+                || m.isAnnotationPresent(After.class)
+                || m.isAnnotationPresent(Around.class)
+                || m.isAnnotationPresent(Replace.class)
+                || m.isAnnotationPresent(AfterThrowing.class);
     }
 
     /**
      * 获取AOP代理对象
      * @param target 目标对象
-     * @param advice 目标对象增强对象
+     * @param advices 拦截器对象
      * @param <T> 返回类型
      * @return 已增强的对象
      */
-    public static <T> T getAopProxy(T target, Object advice) {
+    public static <T> T getAopProxy(T target, Object... advices) {
         // 1. 获取增强类（advice）中的所有方法
         // 2. 解析方法上的注解，并封装成MethodInterceptorDefinition
         // 3. 根据order数值排序
         // 4. 把MethodInterceptorDefinition转换成MethodInterceptor
         // 5. 用then把所有方法拦截器连接起来，形成拦截器链
-        MethodInterceptor interceptor = Arrays
-                .stream(advice.getClass().getDeclaredMethods())
-                .map(m -> new MethodInterceptorDefinition(advice, m))
-                .sorted(Comparator.comparingInt(MethodInterceptorDefinition::getOrder))
-                .map(MethodInterceptorDefinition::build)
+        MethodInterceptor interceptor = Arrays.stream(advices)
+                .flatMap(advice -> Arrays
+                        .stream(advice.getClass().getMethods())
+                        .filter(ByxAOP::isInterceptMethod)
+                        .map(m -> new MethodInterceptorDefinition(advice, m))
+                        .sorted(Comparator.comparingInt(MethodInterceptorDefinition::getOrder))
+                        .map(MethodInterceptorDefinition::build))
                 .reduce(invokeTargetMethod(), MethodInterceptor::then);
+
         return ProxyUtils.proxy(target, interceptor);
     }
 }
