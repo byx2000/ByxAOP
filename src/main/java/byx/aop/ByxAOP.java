@@ -3,6 +3,7 @@ package byx.aop;
 import byx.aop.annotation.*;
 import byx.aop.exception.ByxAOPException;
 import byx.aop.exception.IllegalMethodSignatureException;
+import byx.util.proxy.ProxyType;
 import byx.util.proxy.ProxyUtils;
 import byx.util.proxy.core.MethodInterceptor;
 import byx.util.proxy.core.MethodMatcher;
@@ -207,6 +208,10 @@ public class ByxAOP {
      * @return 已增强的对象
      */
     public static <T> T getAopProxy(T target, Object... advices) {
+        return getAopProxy(target, ProxyType.AUTO, advices);
+    }
+
+    public static <T> T getAopProxy(T target, ProxyType type, Object... advices) {
         // 1. 获取增强类（advice）中的所有方法
         // 2. 解析方法上的注解，并封装成MethodInterceptorDefinition
         // 3. 根据order数值排序
@@ -221,6 +226,13 @@ public class ByxAOP {
                         .map(MethodInterceptorDefinition::build))
                 .reduce(invokeTargetMethod(), MethodInterceptor::then);
 
-        return ProxyUtils.proxy(target, interceptor);
+        switch (type) {
+            case JDK:
+                return ProxyUtils.proxy(target, interceptor, ProxyType.JDK);
+            case BYTE_BUDDY:
+                return ProxyUtils.proxy(target, interceptor, ProxyType.BYTE_BUDDY);
+            default:
+                return ProxyUtils.proxy(target, interceptor);
+        }
     }
 }
